@@ -34,16 +34,14 @@ bool run_statement(std::string sql, sqlite3 **db, sqlite3_stmt **stmt) {
     return true;
 }
 
-BookmarkList get_bookmarks(std::string query, std::string folder, int sort) {
+BookmarkList get_bookmarks(std::string query, int sort) {
     BookmarkList bookmarks;
 
     sqlite3 *db;
     sqlite3_stmt *stmt;
-    std::string sql = "SELECT url, title, icon FROM bookmarks WHERE 1";
+    std::string sql = "SELECT url, title, icon FROM bookmarks";
     if (query != "")
-        sql += " AND (url LIKE '%' || ? || '%' OR title LIKE '%' || ?1 || '%')";
-    if (folder != "")
-        sql += " AND folderId = '" + folder + "'";
+        sql += " WHERE (url LIKE '%' || ? || '%' OR title LIKE '%' || ?1 || '%')";
     if (sort == 0)
         sql += " ORDER BY length(title) > 0 DESC, title ASC";
     else
@@ -77,35 +75,6 @@ BookmarkList get_bookmarks(std::string query, std::string folder, int sort) {
     exit:
     sqlite3_close(db);
     return bookmarks;
-}
-
-FolderList get_bookmark_folders() {
-    FolderList folders;
-/*
-    sqlite3 *db;
-    sqlite3_stmt *stmt;
-    std::string sql = "SELECT folderId, folder FROM folders ORDER BY folder";
-
-    if (!run_statement(sql, &db, &stmt))
-        goto exit;
-
-    {
-        int res = sqlite3_step(stmt);
-        while (res == SQLITE_ROW) {
-            Folder f;
-            f.id = sqlite3_column_string(stmt, 0, "-1");
-            f.name = sqlite3_column_string(stmt, 1, "");
-            folders.emplace_back(f);
-            res = sqlite3_step(stmt);
-        }
-        if (res != SQLITE_DONE) {
-            std::cerr << "Error reading rows: " << sqlite3_errmsg(db) << std::endl;
-        }
-    }
-
-    exit:
-    sqlite3_close(db);*/
-    return folders;
 }
 
 }

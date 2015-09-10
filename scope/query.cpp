@@ -50,21 +50,9 @@ void Query::run(sc::SearchReplyProxy const& reply) {
     // Start by getting information about the query
     const sc::CannedQuery &query(sc::SearchQueryBase::query());
 
-    // The empty string here is important; it denotes the department to use when none has been
-    // selected by the user.
-    sc::Department::SPtr all = sc::Department::create("", query, _("All bookmarks"));
-    Client::FolderList folders = Client::get_bookmark_folders();
-    if (folders.size()) {
-        for (const Client::Folder folder : folders) {
-            sc::Department::SPtr dept = sc::Department::create(folder.id, query, folder.name);
-            all->add_subdepartment(dept);
-        }
-        reply->register_departments(all);
-    }
-
     int sort = settings().at("sort").get_int();
     Client::BookmarkList bookmarks =
-            Client::get_bookmarks(query.query_string(), query.department_id(), sort);
+            Client::get_bookmarks(query.query_string(), sort);
 
     auto cat = reply->register_category("bookmarks", "", "",
                                         sc::CategoryRenderer(BOOKMARK_TEMPLATE));
