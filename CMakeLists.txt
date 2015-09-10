@@ -31,8 +31,6 @@ execute_process(
 
 set(QT_IMPORTS_DIR "lib/${ARCH_TRIPLET}")
 
-option(INSTALL_TESTS "Install the tests on make install" on)
-
 set(APP_NAME          addtodash)
 set(APP_ID            "addtodash.rschroll")
 set(ADDTODASH_DIR "share/qml/addtodash")
@@ -66,13 +64,6 @@ install(FILES "addtodash.contenthub" DESTINATION ${DATA_DIR})
 add_subdirectory(app)
 add_subdirectory(po)
 add_subdirectory(scope)
-
-add_custom_target("autopilot" chmod +x ${CMAKE_SOURCE_DIR}/app/tests/autopilot/run
-                    COMMAND ${CMAKE_SOURCE_DIR}/app/tests/autopilot/run
-                    WORKING_DIRECTORY ./app)
-
-add_custom_target("check" /usr/bin/qmltestrunner -input ${CMAKE_SOURCE_DIR}/app/tests/unit -import ${CMAKE_BINARY_DIR}/backend
-                    WORKING_DIRECTORY ./app)
 
 add_custom_target("run" /usr/bin/qmlscene -I ${CMAKE_BINARY_DIR}/backend  ${CMAKE_SOURCE_DIR}/app/addtodash.qml
                     WORKING_DIRECTORY ./app)

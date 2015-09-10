@@ -11,12 +11,3 @@ configure_file(${DESKTOP_FILE_NAME}.in ${CMAKE_CURRENT_BINARY_DIR}/${DESKTOP_FIL
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${DESKTOP_FILE_NAME} DESTINATION ${DESKTOP_DIR})
 install(FILES ${QML_JS_FILES} DESTINATION ${ADDTODASH_DIR})
-
-# Make the autpilot files visible in qtcreator
-file(GLOB_RECURSE AUTOPILOT_TEST_FILES *.py)
-add_custom_target(addtodash_AutopilotFiles ALL SOURCES ${AUTOPILOT_TEST_FILES})
-
-# Make the qml test files visible in qtcreator
-file(GLOB_RECURSE UNIT_TEST_FILES tests/unit/*.qml)
-add_custom_target(addtodash_UnitTestFiles ALL SOURCES ${UNIT_TEST_FILES})
-
