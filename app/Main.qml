@@ -38,7 +38,8 @@ MainView {
         db.changeVersion(db.version, "1")
         db.transaction(function (tx) {
             tx.executeSql("CREATE TABLE IF NOT EXISTS Bookmarks(url TEXT UNIQUE, title TEXT, " +
-                          "icon BLOB, created TEXT)")
+                          "folder TEXT DEFAULT '', icon BLOB DEFAULT '', manifest TEXT DEFAULT '', " +
+                          "created INT, favorite INT DEFAULT 0, webapp INT DEFAULT 0)")
         })
     }
 
