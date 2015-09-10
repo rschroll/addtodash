@@ -1,0 +1,20 @@
+{
+    "name": "@APP_ID@",
+    "description": "description of addtodash",
+    "architecture": "@CLICK_ARCH@",
+    "title": "@APP_NAME@",
+    "hooks": {
+        "addtodash": {
+            "apparmor": "addtodash.apparmor",
+            "desktop": "addtodash.desktop",
+            "content-hub": "addtodash.contenthub"
+        },
+        "addtodash-scope": {
+            "apparmor": "addtodash-scope.apparmor",
+            "scope": "addtodash"
+        }
+    },
+    "version": "0.1",
+    "maintainer": "Robert Schroll <rschroll@gmail.com>",
+    "framework": "ubuntu-sdk-15.04"
+}

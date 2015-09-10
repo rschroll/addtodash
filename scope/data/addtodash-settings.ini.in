@@ -1,0 +1,6 @@
+[sort]
+type=list
+_displayName=Sorting
+#/ Two sorting methods.  Translate each individually and join with a semicolon.
+_displayValues=By Name;Recent Additions
+defaultValue=0
