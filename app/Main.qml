@@ -2,6 +2,7 @@ import QtQuick 2.0
 import QtQuick.LocalStorage 2.0
 import Ubuntu.Components 1.1
 import Ubuntu.Content 0.1
+import com.canonical.Oxide 1.0
 
 /*!
     \brief MainView with Tabs element.
@@ -29,6 +30,11 @@ MainView {
     width: units.gu(100)
     height: units.gu(75)
 
+    // Both the UserScript and the call to sendMessage need to share the same
+    // context, which should be in the form of a URL.  It doesn't seem to matter
+    // what it is, though.
+    property string usContext: "messaging://"
+
     function openDatabase() {
         return LocalStorage.openDatabaseSync("Bookmarks", "1", "URLs to be shown in a scope", 1000000,
                                              onDatabaseCreated)
@@ -50,12 +56,18 @@ MainView {
         })
     }
 
+    function gotUrl(url) {
+        loadIndicator.running = true;
+        loadIndicator.visible = true;
+        webview.url = url;
+    }
+
     function receiveImport(items) {
         if (items.length != 1) {
             console.log("Got " + items.length + " shared items.  Don't know what to do....")
             return
         }
-        urlField.text = items[0].url
+        root.gotUrl(items[0].url);
     }
 
     Connections {
@@ -66,10 +78,95 @@ MainView {
         }
     }
 
+    WebView {
+        id: webview
+        visible: false
+        width:200
+        height:200
+
+        onLoadingChanged: {
+            console.log("webview loading", loading);
+            if (loading == false) {
+                var msg = webview.rootFrame.sendMessage(root.usContext, "beginParsing", {});
+            }
+        }
+        context: WebContext {
+            id: webcontext
+            userScripts: [
+                UserScript {
+                    context: root.usContext
+                    url: Qt.resolvedUrl("manifestParser.js")
+                }
+            ]
+        }
+
+        messageHandlers: [
+            ScriptMessageHandler { 
+                msgId: "endParsing"
+                contexts: [root.usContext]
+                callback: function(msg, frame) {
+                    console.log("got message", JSON.stringify(msg.args));
+                    loadIndicator.running = false;
+                    loadIndicator.visible = false;
+                    titleField.text = msg.args.short_name;
+                    urlField.text = webview.url
+                    icon.source = msg.args.icons[0].src;
+                    pageContent.visible = true;
+                }
+            }
+        ]
+
+        onNavigationRequested: {
+            request.action = 255; // block all navigation requests
+            console.log("blocked request for", request.url);
+        }
+
+        preferences.allowScriptsToCloseWindows: false
+        preferences.allowUniversalAccessFromFileUrls: false
+        preferences.appCacheEnabled: false
+        preferences.canDisplayInsecureContent: false
+        preferences.canRunInsecureContent: false
+        preferences.caretBrowsingEnabled: false
+        preferences.databasesEnabled: false
+        preferences.javascriptCanAccessClipboard: false
+        preferences.javascriptEnabled: true /* need this or our userscript doesn't work, annoyingly */
+        preferences.loadsImagesAutomatically: false
+        preferences.localStorageEnabled: false
+        preferences.passwordEchoEnabled: false
+        preferences.remoteFontsEnabled: false
+        preferences.shrinksStandaloneImagesToFit: false
+        preferences.textAreasAreResizable: false
+        preferences.touchEnabled: true
+    }
+
     Page {
         title: i18n.tr("addtodash")
 
+        ActivityIndicator {
+            id: loadIndicator
+            anchors.centerIn: parent
+            running: false
+            width: parent.width / 5
+            height: parent.width / 5
+        }
+
         Column {
+            id: loadError
+            spacing: units.gu(1)
+            visible: false
+            anchors {
+                margins: units.gu(2)
+                fill: parent
+            }
+
+            Label {
+                text: "Failed to get page"
+            }
+        }
+
+        Column {
+            id: pageContent
+            visible: false
             spacing: units.gu(1)
             anchors {
                 margins: units.gu(2)
@@ -93,7 +190,13 @@ MainView {
             }
 
             Label {
-                text: i18n.tr("Icon")
+                text: i18n.tr("Icon") + " (we need to take a copy of this, not just show it)"
+            }
+
+            Image {
+                id: icon
+                height: 64
+                width: 64
             }
 
             Button {
@@ -108,6 +211,15 @@ MainView {
                 }
             }
         }
+
+        Component.onCompleted: {
+            var urls = Array.prototype.slice.call(Qt.application.arguments).filter(function(s) { return s.match(/^https?:\/\//); });
+            console.log("urls", urls);
+            if (urls.length === 1) {
+                root.gotUrl(urls[0]);
+            }
+        }
     }
+
 }
 
