@@ -8,8 +8,16 @@ oxide.addMessageHandler("beginParsing", function (msg) {
     }
     parsed.lang = document.getElementsByTagName("html")[0].getAttribute("lang") || "";
     // Apple touch icons
-    [].slice.call(document.querySelectorAll('link[rel="apple-touch-icon"][href],link[rel="apple-touch-icon-precomposed"][href]')).forEach(function(l) {
-        parsed.icons.push({src: l.getAttribute("href"), sizes: l.getAttribute("sizes")});
+    var touchIconLinks = document.querySelectorAll(
+        'link[rel="apple-touch-icon"][href]' + 
+        ',' +
+        'link[rel="apple-touch-icon-precomposed"][href]'
+    );
+    [].slice.call(touchIconLinks).forEach(function(l) {
+        parsed.icons.push({
+            src: l.getAttribute("href"),
+            sizes: l.getAttribute("sizes")
+        });
     });
 
     window.setTimeout(function() { 
