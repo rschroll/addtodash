@@ -39,13 +39,13 @@ BookmarkList get_bookmarks(std::string query, int sort) {
 
     sqlite3 *db;
     sqlite3_stmt *stmt;
-    std::string sql = "SELECT url, title, icon FROM bookmarks";
+    std::string sql = "SELECT url, title, icon, favorite FROM bookmarks";
     if (query != "")
         sql += " WHERE (url LIKE '%' || ? || '%' OR title LIKE '%' || ?1 || '%')";
     if (sort == 0)
-        sql += " ORDER BY length(title) > 0 DESC, title ASC";
+        sql += " ORDER BY favorite DESC, length(title) > 0 DESC, title ASC";
     else
-        sql += " ORDER BY created DESC";
+        sql += " ORDER BY favorite DESC, created DESC";
 
     if (!run_statement(sql, &db, &stmt))
         goto exit;
@@ -64,6 +64,7 @@ BookmarkList get_bookmarks(std::string query, int sort) {
             b.url = sqlite3_column_string(stmt, 0, "");
             b.title = sqlite3_column_string(stmt, 1, b.url);
             b.icon = sqlite3_column_string(stmt, 2, "file:///usr/share/icons/suru/actions/scalable/stock_website.svg");
+            b.favorite = sqlite3_column_int(stmt, 3);
             bookmarks.emplace_back(b);
             res = sqlite3_step(stmt);
         }
