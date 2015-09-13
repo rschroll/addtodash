@@ -2,7 +2,7 @@ import QtQuick 2.2
 import QtMultimedia 5.0
 import QtFeedback 5.0
 import Ubuntu.Components 1.1
-import com.canonical.Oxide 1.0
+import com.canonical.Oxide 1.0 as Oxide
 import "UCSComponents"
 import "."
 //import "../config.js" as Conf
@@ -13,6 +13,9 @@ MainView {
     objectName: "mainView"
 
     applicationName: "google-plus.ogra"
+
+    width: units.gu(60)
+    height: units.gu(105)
 
     useDeprecatedToolbar: false
     anchorToKeyboard: true
@@ -31,12 +34,15 @@ MainView {
         url: the URL to open in the webview
         pattern: a URL pattern to match; opening a URL which does not match this
             pattern will open it in the browser instead
+            (defaults to the domain of the URL)
         */
         var parsed = URLParser.ParseUrl(executeURL);
         if (!parsed.qs || !parsed.qs.url) {
             console.log("No actual URL passed");
             return;
         }
+        var rparsed = URLParser.ParseUrl(parsed.qs.url);
+        root.pattern = parsed.qs.pattern || rparsed.resource;
         webview.url = parsed.qs.url;
     }
 
@@ -66,7 +72,7 @@ MainView {
         }
         */
 
-        WebView {
+        Oxide.WebView {
             id: webview
             anchors {
                 fill: parent
@@ -80,8 +86,17 @@ MainView {
             preferences.javascriptCanAccessClipboard: true
             filePicker: filePickerLoader.item
 
-            function navigationRequestedDelegate(request) {
+            Component.onCompleted: {
+                preferences.localStorageEnabled = true
+                //if (Qt.application.arguments[1].toString().indexOf(myUrl) > -1) {
+                //    console.warn("got argument: " + Qt.application.arguments[1])
+                //    url = Qt.application.arguments[1]
+                //}
+                console.warn("url is: " + url)
+            }
+            onNavigationRequested: {
                 var url = request.url.toString();
+                console.log("requested", url);
                 var pattern = root.pattern.split(',');
                 var isvalid = false;
 
@@ -105,17 +120,9 @@ MainView {
                 } 
                 if(isvalid == false) {
                     console.warn("Opening remote: " + url);
-                    Qt.openUrlExternally(url)
                     request.action = Oxide.NavigationRequest.ActionReject
+                    Qt.openUrlExternally(url)
                 }
-            }
-            Component.onCompleted: {
-                preferences.localStorageEnabled = true
-                //if (Qt.application.arguments[1].toString().indexOf(myUrl) > -1) {
-                //    console.warn("got argument: " + Qt.application.arguments[1])
-                //    url = Qt.application.arguments[1]
-                //}
-                console.warn("url is: " + url)
             }
             onGeolocationPermissionRequested: { request.accept() }
             Loader {
