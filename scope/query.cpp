@@ -54,11 +54,20 @@ void Query::run(sc::SearchReplyProxy const& reply) {
     Client::BookmarkList bookmarks =
             Client::get_bookmarks(query.query_string(), sort);
 
-    auto cat = reply->register_category("bookmarks", "", "",
-                                        sc::CategoryRenderer(BOOKMARK_TEMPLATE));
+    if (!bookmarks.size())
+        // Explanatory text
+        return;
+
+    auto fav_cat = reply->register_category("favorites", "", "",
+                                            sc::CategoryRenderer(BOOKMARK_TEMPLATE));
+    // Check to see if any bookmarks have been favorited (they come first)
+    bool areFavorites = (bookmarks[0].favorite > 0);
+    // No need for a label if no bookmarks are favorited
+    auto all_cat = reply->register_category("bookmarks", areFavorites ? _("Unsorted") : "", "",
+                                            sc::CategoryRenderer(BOOKMARK_TEMPLATE));
 
     for (const Client::Bookmark bookmark : bookmarks) {
-        sc::CategorisedResult res(cat);
+        sc::CategorisedResult res(bookmark.favorite ? fav_cat : all_cat);
         res.set_uri(bookmark.url);
         res.set_title(bookmark.title);
         res.set_art(bookmark.icon);
