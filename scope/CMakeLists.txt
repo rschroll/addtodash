@@ -32,6 +32,7 @@ include_directories(
 
 # If we need to refer to the scope's name or package in code, these definitions will help
 add_definitions(-DPACKAGE_NAME="${PACKAGE_NAME}")
+add_definitions(-DAPP_ID="${APP_ID}")
 add_definitions(-DSCOPE_NAME="${SCOPE_NAME}")
 add_definitions(-DGETTEXT_PACKAGE="${GETTEXT_PACKAGE}")
 

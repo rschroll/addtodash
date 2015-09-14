@@ -38,6 +38,23 @@ const static string BOOKMARK_TEMPLATE =
         }
         )";
 
+const static string MANAGEMENT_TEMPLATE =
+        R"(
+{
+        "schema-version": 1,
+        "template": {
+        "category-layout": "grid",
+        "card-layout": "vertical",
+        "card-size": "large",
+        "card-background": "color:///white"
+        },
+        "components": {
+        "title": "title",
+        "mascot": "art"
+        }
+        }
+        )";
+
 Query::Query(const sc::CannedQuery &query, const sc::SearchMetadata &metadata) :
     sc::SearchQueryBase(query, metadata) {
 }
@@ -79,6 +96,17 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             // Query has been cancelled.
             return;
         }
+    }
+
+    if (!has_query) {
+        auto management_cat = reply->register_category("management", "", "",
+                                                       sc::CategoryRenderer(MANAGEMENT_TEMPLATE));
+        sc::CategorisedResult res(management_cat);
+        res.set_title(_("Manage Bookmarks"));
+        res.set_art("file:///opt/click.ubuntu.com/" APP_ID "/current/graphics/addtodash.png");
+        res.set_uri("addtodash://manage");
+        res.set_intercept_activation();
+        reply->push(res);
     }
 }
 
