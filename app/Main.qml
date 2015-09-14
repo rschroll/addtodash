@@ -28,7 +28,7 @@ MainView {
     width: units.gu(100)
     height: units.gu(75)
 
-    function gotUrl(url) {
+    function edit(url) {
         stack.push(Qt.resolvedUrl("DetailsPage.qml"), {url: url, newUrl: true})
     }
 
@@ -37,7 +37,7 @@ MainView {
             console.log("Got " + items.length + " shared items.  Don't know what to do....")
             return
         }
-        root.gotUrl(items[0].url);
+        root.edit(items[0].url);
     }
 
     Connections {
@@ -76,6 +76,14 @@ MainView {
                 })
             }
             Component.onCompleted: loadBookmarks()
+
+            head.actions: [
+                Action {
+                    iconName: "add"
+                    text: i18n.tr("Add Bookmark")
+                    onTriggered: root.edit("")
+                }
+            ]
 
             Column {
                 anchors.fill: parent
@@ -135,7 +143,7 @@ MainView {
                         return s.match(/^https?:\/\//);
                     });
         if (urls.length === 1) {
-            root.gotUrl(urls[0]);
+            root.edit(urls[0]);
         }
     }
 }

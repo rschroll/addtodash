@@ -23,8 +23,12 @@ Page {
 
     Component.onCompleted: {
         if (newUrl) {
-            state = "loading"
-            webview.url = url
+            if (url) {
+                state = "loading"
+                webview.url = url
+            } else {
+                state = "new"
+            }
         }
     }
 
@@ -73,14 +77,32 @@ Page {
                 id: urlField
                 anchors {
                     left: urlLabel.right
+                    right: editUrlButton.left
+                }
+                inputMethodHints:Qt.ImhUrlCharactersOnly
+                readOnly: detailsPage.state != "new"
+            }
+
+            Button {
+                id: editUrlButton
+                width: visible ? units.gu(6) : 0
+                anchors {
                     right: parent.right
+                    verticalCenter: parent.verticalCenter
+                }
+                iconName: "edit"
+                visible: detailsPage.state == "editing"
+
+                onClicked: {
+                    detailsPage.state = "new"
+                    urlField.forceActiveFocus()
                 }
             }
         }
 
         Item {
             id: titleItem
-            visible: detailsPage.state == "editing"
+            visible: detailsPage.state != "loading"
             width: parent.width
             height: titleField.height
 
@@ -103,18 +125,25 @@ Page {
             }
         }
 
-        Row {
+        Item {
             id: iconItem
-            visible: detailsPage.state == "editing"
+            visible: detailsPage.state != "loading"
+            width: parent.width
+            height: iconShape.height
 
             Label {
+                id: iconLabel
                 text: i18n.tr("Icon")
                 width: mainColumn.labelWidth
-                anchors.verticalCenter: parent.verticalCenter
+                anchors{
+                    left: parent.left
+                    verticalCenter: parent.verticalCenter
+                }
             }
 
             UbuntuShape {
                 id: iconShape
+                anchors.left: iconLabel.right
                 source: Image {
                     asynchronous: true
                     fillMode: Image.PreserveAspectCrop
@@ -123,11 +152,26 @@ Page {
                             "file:///usr/share/icons/suru/actions/scalable/stock_website.svg"
                 }
             }
+
+            Button {
+                width: parent.width/2 - units.gu(1)
+                anchors {
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                }
+                text: i18n.tr("Load from page")
+                visible: detailsPage.state == "new"
+
+                onClicked: {
+                    detailsPage.state = "loading"
+                    webview.url = detailsPage.url
+                }
+            }
         }
 
         Item {
             id: buttonItem
-            visible: detailsPage.state == "editing"
+            visible: detailsPage.state != "loading"
             height: childrenRect.height
             width: parent.width
 
