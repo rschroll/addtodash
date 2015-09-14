@@ -3,7 +3,7 @@ import Ubuntu.Components 1.2
 import Ubuntu.Components.ListItems 1.0
 import Ubuntu.Content 0.1
 
-import "database.js" as Database
+import "../shared/database.js" as Database
 
 /*!
     \brief MainView with Tabs element.

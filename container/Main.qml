@@ -1,12 +1,13 @@
 import QtQuick 2.2
 import QtMultimedia 5.0
 import QtFeedback 5.0
+import QtQuick.LocalStorage 2.0
 import Ubuntu.Components 1.1
 import com.canonical.Oxide 1.0 as Oxide
 import "UCSComponents"
 import "."
-//import "../config.js" as Conf
 import "urlparser.js" as URLParser;
+import "../shared/database.js" as Database
 
 MainView {
     id: root
@@ -23,6 +24,11 @@ MainView {
 
     property int myNumber: 1
     property string pattern: ".*"
+    property string currentAppRootURL: ""
+
+    function saveStatus() {
+        Database.saveContainerState(root.myNumber, root.currentAppRootURL);
+    }
 
     function parseAndLoad(executeURL) {
         /*
@@ -43,7 +49,20 @@ MainView {
         }
         var rparsed = URLParser.ParseUrl(parsed.qs.url);
         root.pattern = parsed.qs.pattern || rparsed.resource;
-        webview.url = parsed.qs.url;
+        if (root.currentAppRootURL == parsed.qs.url) {
+            // we've been asked to open the URL we're already looking at
+            // we may have navigated to a new page in that web app
+            // so don't do anything
+        } else {
+            // either we're starting up and aren't currently showing anything,
+            // or we've been explicitly told by the scope to open this URL
+            // even though we're currently showing something else, so we
+            // assume that the scope knows what it's doing (i.e., we're the
+            // oldest running container) and open the URL as we've been told
+            webview.url = parsed.qs.url;
+            root.currentAppRootURL = webview.url;
+        }
+        root.saveStatus();
     }
 
     Page {
@@ -86,14 +105,6 @@ MainView {
             preferences.javascriptCanAccessClipboard: true
             filePicker: filePickerLoader.item
 
-            Component.onCompleted: {
-                preferences.localStorageEnabled = true
-                //if (Qt.application.arguments[1].toString().indexOf(myUrl) > -1) {
-                //    console.warn("got argument: " + Qt.application.arguments[1])
-                //    url = Qt.application.arguments[1]
-                //}
-                console.warn("url is: " + url)
-            }
             onNavigationRequested: {
                 var url = request.url.toString();
                 console.log("requested", url);
@@ -119,7 +130,7 @@ MainView {
                     }
                 } 
                 if(isvalid == false) {
-                    console.warn("Opening remote: " + url);
+                    console.warn("Requested URL", url, "does not match", pattern);
                     request.action = Oxide.NavigationRequest.ActionReject
                     Qt.openUrlExternally(url)
                 }
@@ -209,8 +220,18 @@ MainView {
                 urls[0] + " and opened it");
                 root.parseAndLoad(urls[0]);
         } else {
-            console.log("Container " + root.myNumber + " was started with no URL, weirdly;" +
+            console.log("Container " + root.myNumber + 
+                " was started with no URL, which shouldn't happen;" +
                 " args were " + JSON.stringify(args));
+        }
+    }
+
+    Connections {
+        target: Qt.application
+        onStateChanged: {
+            if(Qt.application.state === Qt.ApplicationActive && root.currentAppRootURL !== "") {
+                root.saveStatus();
+            }
         }
     }
 }
