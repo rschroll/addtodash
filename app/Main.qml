@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import QtQuick.LocalStorage 2.0
-import Ubuntu.Components 1.1
+import Ubuntu.Components 1.2
+import Ubuntu.Components.ListItems 1.0
 import Ubuntu.Content 0.1
 import com.canonical.Oxide 1.0
 
@@ -24,9 +25,6 @@ MainView {
     */
     //automaticOrientation: true
 
-    // Removes the old toolbar and enables new features of the new header.
-    useDeprecatedToolbar: false
-
     width: units.gu(100)
     height: units.gu(75)
 
@@ -49,10 +47,10 @@ MainView {
         })
     }
 
-    function addBookmark(url, title, icon) {
+    function addBookmark(url, title, icon, favorite) {
         openDatabase().transaction(function (tx) {
-            tx.executeSql("INSERT OR IGNORE INTO Bookmarks(url, title, icon, created) " +
-                          "VALUES(?, ?, ?, datetime('now'))", [url, title, icon])
+            tx.executeSql("INSERT OR REPLACE INTO Bookmarks(url, title, icon, created, favorite) " +
+                          "VALUES(?, ?, ?, datetime('now'), ?)", [url, title, icon, favorite])
         })
     }
 
@@ -68,6 +66,15 @@ MainView {
             return
         }
         root.gotUrl(items[0].url);
+    }
+
+    function listBookmarks(callback) {
+        openDatabase().readTransaction(function (tx) {
+            var res = tx.executeSql("SELECT url, title, icon, favorite FROM bookmarks " +
+                                    "ORDER BY favorite DESC, length(title) > 0 DESC, title ASC")
+            for (var i=0; i<res.rows.length; i++)
+                callback(res.rows.item(i))
+        })
     }
 
     Connections {
@@ -156,9 +163,9 @@ MainView {
                         best_src = webview.chooseBestIcon(msg.args.icons);
                     }
                     if (best_src) {
-                        icon.source = best_src;
+                        icon = best_src;
                     } else {
-                        icon.source = Qt.resolvedUrl("graphics/addtodash.png");
+                        icon = Qt.resolvedUrl("graphics/addtodash.png");
                     }
                     pageContent.visible = true;
                 }
@@ -188,93 +195,190 @@ MainView {
         preferences.touchEnabled: true
     }
 
-    Page {
-        title: i18n.tr("addtodash")
+    PageStack {
+        id: stack
+        Component.onCompleted: push(overviewPage)
 
-        ActivityIndicator {
-            id: loadIndicator
-            anchors.centerIn: parent
-            running: false
-            width: parent.width / 5
-            height: parent.width / 5
-        }
-
-        Column {
-            id: loadError
-            spacing: units.gu(1)
+        Page {
+            id: overviewPage
             visible: false
-            anchors {
-                margins: units.gu(2)
-                fill: parent
+
+            title: i18n.tr("Bookmarks")
+
+            ListModel {
+                id: favoriteBookmarks
+            }
+            ListModel {
+                id: unsortedBookmarks
             }
 
-            Label {
-                text: "Failed to get page"
+            function loadBookmarks() {
+                favoriteBookmarks.clear()
+                unsortedBookmarks.clear()
+                root.listBookmarks(function (item) {
+                    if (item.favorite)
+                        favoriteBookmarks.append(item)
+                    else
+                        unsortedBookmarks.append(item)
+                })
             }
-        }
+            Component.onCompleted: loadBookmarks()
 
-        Column {
-            id: pageContent
-            visible: false
-            spacing: units.gu(1)
-            anchors {
-                margins: units.gu(2)
-                fill: parent
+            Column {
+                anchors.fill: parent
+
+                Header {
+                    id: favoriteHeader
+                    text: i18n.tr("Favorites")
+                }
+
+                Item {
+                    height: parent.height / 2 - favoriteHeader.height
+                    width: parent.width
+                    ListView {
+                        anchors.fill: parent
+                        model: favoriteBookmarks
+                        delegate: bookmarkDelegate
+                        clip: true
+                    }
+                }
+
+                Header {
+                    id: unsortedHeader
+                    text: i18n.tr("Unsorted")
+                }
+
+                Item {
+                    height: parent.height / 2 - unsortedHeader.height
+                    width: parent.width
+                    ListView {
+                        anchors.fill: parent
+                        model: unsortedBookmarks
+                        delegate: bookmarkDelegate
+                        clip: true
+                    }
+                }
             }
 
-            Label {
-                text: i18n.tr("URL")
-            }
-
-            TextField {
-                id: urlField
-            }
-
-            Label {
-                text: i18n.tr("Title")
-            }
-
-            TextField {
-                id: titleField
-            }
-
-            Label {
-                text: i18n.tr("Icon") + " (we need to take a copy of this, not just show it)"
-            }
-
-            Image {
-                id: icon
-                height: 64
-                width: 64
-                asynchronous: true
-                fillMode: Image.PreserveAspectCrop
-                clip: true
-            }
-
-            Button {
-                width: parent.width
-
-                text: i18n.tr("Save")
-
-                onClicked: {
-                    addBookmark(urlField.text, titleField.text, "")
-                    urlField.text = ""
-                    titleField.text = ""
+            Component {
+                id: bookmarkDelegate
+                Subtitled {
+                    text: model.title
+                    subText: model.url
+                    icon: model.icon
+                    fallbackIconName: "stock_website"
+                    onClicked: stack.push(detailsPage,
+                                              {url: model.url, bookmarkTitle: model.title,
+                                              icon: model.icon || "", favorite: model.favorite})
                 }
             }
         }
 
-        Component.onCompleted: {
-            var urls = Array.prototype.slice.call(
-                Qt.application.arguments
-            ).filter(function(s) {
-                return s.match(/^https?:\/\//);
-            });
-            if (urls.length === 1) {
-                root.gotUrl(urls[0]);
+        Page {
+            id: detailsPage
+            visible: false
+
+            title: i18n.tr("addtodash")
+            property alias url: urlField.text
+            property alias bookmarkTitle: titleField.text
+            property string icon: ""
+            property int favorite: 0
+
+            function close(wasModified) {
+                url = ""
+                bookmarkTitle = ""
+                icon = ""
+                favorite = 0
+                if (wasModified)
+                    overviewPage.loadBookmarks()
+                stack.pop()
+            }
+
+            ActivityIndicator {
+                id: loadIndicator
+                anchors.centerIn: parent
+                running: false
+                width: parent.width / 5
+                height: parent.width / 5
+            }
+
+            Column {
+                id: loadError
+                spacing: units.gu(1)
+                visible: false
+                anchors {
+                    margins: units.gu(2)
+                    fill: parent
+                }
+
+                Label {
+                    text: "Failed to get page"
+                }
+            }
+
+            Column {
+                id: pageContent
+                visible: true
+                spacing: units.gu(1)
+                anchors {
+                    margins: units.gu(2)
+                    fill: parent
+                }
+
+                Label {
+                    text: i18n.tr("URL")
+                }
+
+                TextField {
+                    id: urlField
+                }
+
+                Label {
+                    text: i18n.tr("Title")
+                }
+
+                TextField {
+                    id: titleField
+                }
+
+                Label {
+                    text: i18n.tr("Icon") + " (we need to take a copy of this, not just show it)"
+                }
+
+                UbuntuShape {
+                    id: iconShape
+                    source: Image {
+                        asynchronous: true
+                        fillMode: Image.PreserveAspectCrop
+                        clip: true
+                        source: detailsPage.icon ||
+                                "file:///usr/share/icons/suru/actions/scalable/stock_website.svg"
+                    }
+                }
+
+                Button {
+                    width: parent.width
+
+                    text: i18n.tr("Save")
+
+                    onClicked: {
+                        addBookmark(detailsPage.url, detailsPage.bookmarkTitle, detailsPage.icon,
+                                    detailsPage.favorite)
+                        detailsPage.close(true)
+                    }
+                }
+            }
+
+            Component.onCompleted: {
+                var urls = Array.prototype.slice.call(
+                            Qt.application.arguments
+                            ).filter(function(s) {
+                                return s.match(/^https?:\/\//);
+                            });
+                if (urls.length === 1) {
+                    root.gotUrl(urls[0]);
+                }
             }
         }
     }
-
 }
-
