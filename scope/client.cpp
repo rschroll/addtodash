@@ -40,14 +40,17 @@ BookmarkList get_bookmarks(std::string query, int sort) {
     sqlite3 *db;
     sqlite3_stmt *stmt;
     std::string sql = "SELECT url, title, icon, favorite FROM bookmarks";
+    std::string sort_sql = " ORDER BY ";
     if (query != "")
         sql += " WHERE (url LIKE '%' || ? || '%' OR title LIKE '%' || ?1 || '%')";
-    if (sort == 0)
-        sql += " ORDER BY favorite DESC, length(title) > 0 DESC, title ASC";
     else
-        sql += " ORDER BY favorite DESC, created DESC";
+        sort_sql += "favorite DESC, ";
+    if (sort == 0)
+        sort_sql += "length(title) > 0 DESC, title ASC";
+    else
+        sort_sql += "created DESC";
 
-    if (!run_statement(sql, &db, &stmt))
+    if (!run_statement(sql + sort_sql, &db, &stmt))
         goto exit;
 
     if (query != "") {

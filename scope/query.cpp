@@ -51,6 +51,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
     const sc::CannedQuery &query(sc::SearchQueryBase::query());
 
     int sort = settings().at("sort").get_int();
+    bool has_query = (query.query_string() != "");
     Client::BookmarkList bookmarks =
             Client::get_bookmarks(query.query_string(), sort);
 
@@ -67,7 +68,8 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                                             sc::CategoryRenderer(BOOKMARK_TEMPLATE));
 
     for (const Client::Bookmark bookmark : bookmarks) {
-        sc::CategorisedResult res(bookmark.favorite ? fav_cat : all_cat);
+        // If running a query, don't put results into different categories.
+        sc::CategorisedResult res((bookmark.favorite || has_query) ? fav_cat : all_cat);
         res.set_uri(bookmark.url);
         res.set_title(bookmark.title);
         res.set_art(bookmark.icon);
