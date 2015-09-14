@@ -32,8 +32,7 @@ const static string BOOKMARK_TEMPLATE =
         "title": "title",
         "art" : {
         "field": "art"
-        },
-        "subtitle": "subtitle"
+        }
         }
         }
         )";
