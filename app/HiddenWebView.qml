@@ -77,10 +77,16 @@ WebView {
         }
     ]
 
+    /* For now, allow hidden pages to navigate themselves elsewhere. Review this;
+       ideally we wouldn't allow a page to jump somewhere else, but we need to
+       correctly handle things like a URL of http://example.org/thing
+       which redirects to http://example.org/thing/ with a slash, or to
+       https://example.org/thing to be over SSL.
     onNavigationRequested: {
         request.action = 255; // block all navigation requests
-        console.log("blocked request for", request.url);
+        console.log("blocked request for", request.url, "when url is", url);
     }
+    */
 
     preferences.allowScriptsToCloseWindows: false
     preferences.allowUniversalAccessFromFileUrls: false
