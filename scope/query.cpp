@@ -14,11 +14,35 @@
 #include <unity/scopes/SearchReply.h>
 
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 
 namespace sc = unity::scopes;
 
 using namespace std;
 
+
+// From http://stackoverflow.com/questions/154536/encode-decode-urls-in-c
+string url_encode(const string &value) {
+    ostringstream escaped;
+    escaped.fill('0');
+    escaped << hex;
+
+    for (string::const_iterator i = value.begin(), n = value.end(); i != n; ++i) {
+        string::value_type c = (*i);
+
+        // Keep alphanumeric and other accepted characters intact
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+            continue;
+        }
+
+        // Any other characters are percent-encoded
+        escaped << '%' << uppercase << setw(2) << int((unsigned char) c);
+    }
+
+    return escaped.str();
+}
 
 const static string BOOKMARK_TEMPLATE =
         R"(
@@ -83,10 +107,19 @@ void Query::run(sc::SearchReplyProxy const& reply) {
     auto all_cat = reply->register_category("bookmarks", areFavorites ? _("Unsorted") : "", "",
                                             sc::CategoryRenderer(BOOKMARK_TEMPLATE));
 
+    int i = 0;
     for (const Client::Bookmark bookmark : bookmarks) {
         // If running a query, don't put results into different categories.
         sc::CategorisedResult res((bookmark.favorite || has_query) ? fav_cat : all_cat);
-        res.set_uri(bookmark.url);
+        if (bookmark.url.substr(0, 4) == "http") {
+            ostringstream url;
+            url << "addtodash://container-" << i
+                << "/?url=" << url_encode(bookmark.url);
+            res.set_uri(url.str());
+            i = (i + 1) % N_CONTAINERS;
+        } else {
+            res.set_uri(bookmark.url);
+        }
         res.set_title(bookmark.title);
         res.set_art(bookmark.icon);
         res.set_intercept_activation();
