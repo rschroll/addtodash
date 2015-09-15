@@ -7,7 +7,8 @@
         "addtodash": {
             "apparmor": "addtodash.apparmor",
             "desktop": "addtodash.desktop",
-            "content-hub": "addtodash.contenthub"
+            "content-hub": "addtodash.contenthub",
+            "urls": "addtodash.url-dispatcher"
         },
         "addtodash-scope": {
             "apparmor": "addtodash-scope.apparmor",

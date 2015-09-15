@@ -60,6 +60,7 @@ install(DIRECTORY "app/graphics" DESTINATION ${DATA_DIR})
 install(FILES "addtodash.apparmor" DESTINATION ${DATA_DIR})
 install(FILES "addtodash-scope.apparmor" DESTINATION ${DATA_DIR})
 install(FILES "addtodash.contenthub" DESTINATION ${DATA_DIR})
+install(FILES "addtodash.url-dispatcher" DESTINATION ${DATA_DIR})
 
 add_subdirectory(app)
 add_subdirectory(po)
@@ -74,6 +75,7 @@ add_custom_target("addtodash_ClickFiles" ALL SOURCES
                   "addtodash.apparmor"
                   "addtodash-scope.apparmor"
                   "addtodash.contenthub"
+                  "addtodash.url-dispatcher"
                   "manifest.json.in"
                   "scope/data/addtodash.ini.in"
                   "scope/data/addtodash-settings.ini.in")

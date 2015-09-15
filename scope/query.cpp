@@ -32,8 +32,24 @@ const static string BOOKMARK_TEMPLATE =
         "title": "title",
         "art" : {
         "field": "art"
+        }
+        }
+        }
+        )";
+
+const static string MANAGEMENT_TEMPLATE =
+        R"(
+{
+        "schema-version": 1,
+        "template": {
+        "category-layout": "grid",
+        "card-layout": "vertical",
+        "card-size": "large",
+        "card-background": "color:///white"
         },
-        "subtitle": "subtitle"
+        "components": {
+        "title": "title",
+        "mascot": "art"
         }
         }
         )";
@@ -51,6 +67,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
     const sc::CannedQuery &query(sc::SearchQueryBase::query());
 
     int sort = settings().at("sort").get_int();
+    bool has_query = (query.query_string() != "");
     Client::BookmarkList bookmarks =
             Client::get_bookmarks(query.query_string(), sort);
 
@@ -67,7 +84,8 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                                             sc::CategoryRenderer(BOOKMARK_TEMPLATE));
 
     for (const Client::Bookmark bookmark : bookmarks) {
-        sc::CategorisedResult res(bookmark.favorite ? fav_cat : all_cat);
+        // If running a query, don't put results into different categories.
+        sc::CategorisedResult res((bookmark.favorite || has_query) ? fav_cat : all_cat);
         res.set_uri(bookmark.url);
         res.set_title(bookmark.title);
         res.set_art(bookmark.icon);
@@ -77,6 +95,17 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             // Query has been cancelled.
             return;
         }
+    }
+
+    if (!has_query) {
+        auto management_cat = reply->register_category("management", "", "",
+                                                       sc::CategoryRenderer(MANAGEMENT_TEMPLATE));
+        sc::CategorisedResult res(management_cat);
+        res.set_title(_("Manage Bookmarks"));
+        res.set_art("file:///opt/click.ubuntu.com/" APP_ID "/current/graphics/addtodash.png");
+        res.set_uri("addtodash://manage");
+        res.set_intercept_activation();
+        reply->push(res);
     }
 }
 
