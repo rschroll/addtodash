@@ -13,7 +13,7 @@ MainView {
     id: root
     objectName: "mainView"
 
-    applicationName: "google-plus.ogra"
+    applicationName: "addtodash.rschroll"
 
     width: units.gu(60)
     height: units.gu(105)
@@ -33,8 +33,7 @@ MainView {
     function parseAndLoad(executeURL) {
         /*
         The executeURL looks like this:
-        addtodash-container-1:///ignored?url=http%3A%2F%2Fwww.ubuntu.com%2F&...
-        (note three slashes)
+        addtodash://container-1/?url=http%3A%2F%2Fwww.ubuntu.com%2F&...
         All parameters are URI-encoded (as expected), and are from the list below
         The url parameter is required; all others are optional.
         url: the URL to open in the webview
@@ -194,35 +193,26 @@ MainView {
     Connections {
         target: UriHandler
         onOpened: {
-            if (uris.length === 0 ) {
+            if (uris.length === 0)
                 return;
-            }
-            // we are already open, so open this one in the next container
-            var parsed = uris[0].match(/^(addtodash-container-)([0-9]+)(:\/\/\/.*)$/);
-            var outurl = "addtodash-container-" + (root.myNumber+1) + parsed[3];
-            Qt.openUrlExternally(outurl);
-            console.log("Container " + root.myNumber + " got URI request " + 
-                uris[0] + " and passed it on as " + outurl);
+
+            console.log("Got URI request: " + uris[0])
+            root.parseAndLoad(uris[0])
         }
     }
 
     Component.onCompleted: {
         // On startup, get the URL we were called with
-        var args = Array.prototype.slice.call(
-                    Qt.application.arguments
-                );
+        var args = Array.prototype.slice.call(Qt.application.arguments);
+        root.myNumber = parseInt(args[args.length - 1], 10);
         var urls = args.filter(function(s) {
-            return s.match(/^addtodash-container-[0-9]+:\/\//);
+            return s.match(/^addtodash:\/\/container-[0-9]+/);
         });
-        root.myNumber = parseInt(args[args.length-1], 10);
         if (urls.length > 0) {
-            console.log("Container " + root.myNumber + " got URI request " + 
-                urls[0] + " and opened it");
-                root.parseAndLoad(urls[0]);
+            console.log("Got URI on command line: " + urls[0]);
+            root.parseAndLoad(urls[0]);
         } else {
-            console.log("Container " + root.myNumber + 
-                " was started with no URL, which shouldn't happen;" +
-                " args were " + JSON.stringify(args));
+            console.log("Started with no URIs; args were " + JSON.stringify(args));
         }
     }
 
