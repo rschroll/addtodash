@@ -34,8 +34,13 @@ set(QT_IMPORTS_DIR "lib/${ARCH_TRIPLET}")
 set(APP_NAME          addtodash)
 set(APP_ID            "addtodash.rschroll")
 set(ADDTODASH_DIR "share/qml/addtodash")
+set(CONTAINER_DIR "share/qml/container")
+set(SHARED_DIR "share/qml/shared")
 set(MAIN_QML          "Main.qml")
 set(ICON              "graphics/addtodash.png")
+set(N_CONTAINERS 16)
+# CMake for loops contain both ends of a range.  I didn't know such stupidity was possible.
+math(EXPR N_MAX "${N_CONTAINERS} - 1")
 
 set(SCOPE_INSTALL_DIR "/addtodash")
 set(SCOPE_NAME        "${APP_ID}_addtodash-scope")
@@ -48,6 +53,12 @@ set(DESKTOP_FILE_NAME "addtodash.desktop")
 
 # This sets the commandline that is executed on the device
 set(EXEC "qmlscene $@ ${ADDTODASH_DIR}/${MAIN_QML}")
+set(EXEC_CONTAINER "qmlscene $@ ${CONTAINER_DIR}/${MAIN_QML}")
+
+set(HOOKS "")
+foreach(N RANGE ${N_MAX})
+  set(HOOKS "${HOOKS},\n\"container-${N}\": {\"apparmor\": \"addtodash-container.apparmor\", \"desktop\": \"addtodash-container-${N}.desktop\", \"urls\": \"addtodash-container-${N}.url-dispatcher\"}")
+endforeach(N)
 
 # Configures the manifest file. The manifest file describes the click package
 # to the target system. All cmake variables that are defined at this point
@@ -59,12 +70,15 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/manifest.json
 install(DIRECTORY "app/graphics" DESTINATION ${DATA_DIR})
 install(FILES "addtodash.apparmor" DESTINATION ${DATA_DIR})
 install(FILES "addtodash-scope.apparmor" DESTINATION ${DATA_DIR})
+install(FILES "addtodash-container.apparmor" DESTINATION ${DATA_DIR})
 install(FILES "addtodash.contenthub" DESTINATION ${DATA_DIR})
 install(FILES "addtodash.url-dispatcher" DESTINATION ${DATA_DIR})
 
 add_subdirectory(app)
 add_subdirectory(po)
 add_subdirectory(scope)
+add_subdirectory(container)
+add_subdirectory(shared)
 
 add_custom_target("run" /usr/bin/qmlscene -I ${CMAKE_BINARY_DIR}/backend  ${CMAKE_SOURCE_DIR}/app/addtodash.qml
                     WORKING_DIRECTORY ./app)
@@ -74,6 +88,7 @@ add_custom_target("run" /usr/bin/qmlscene -I ${CMAKE_BINARY_DIR}/backend  ${CMAK
 add_custom_target("addtodash_ClickFiles" ALL SOURCES
                   "addtodash.apparmor"
                   "addtodash-scope.apparmor"
+                  "addtodash-container.apparmor"
                   "addtodash.contenthub"
                   "addtodash.url-dispatcher"
                   "manifest.json.in"

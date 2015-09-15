@@ -14,6 +14,7 @@
             "apparmor": "addtodash-scope.apparmor",
             "scope": "addtodash"
         }
+        @HOOKS@
     },
     "version": "0.1",
     "maintainer": "Robert Schroll <rschroll@gmail.com>",

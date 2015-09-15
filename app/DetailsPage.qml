@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import Ubuntu.Components 1.2
 
-import "database.js" as Database
+import "../shared/database.js" as Database
 
 Page {
     id: detailsPage

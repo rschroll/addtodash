@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=addtodashcontainer
+Exec=@EXEC_CONTAINER@ @N@
+Icon=@ICON@
+Terminal=false
+Type=Application
+#NoDisplay=true
+X-Ubuntu-Touch=true
