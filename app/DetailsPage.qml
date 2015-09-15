@@ -38,9 +38,10 @@ Page {
         function parsingCallback(msg, frame) {
             console.log("got message", JSON.stringify(msg.args));
             if (detailsPage.state == "loading") {
-                bookmarkTitle = msg.args.short_name;
-                if (msg.args.icons && msg.args.icons.length > 1)
-                    icon = webview.chooseBestIcon(msg.args.icons);
+                detailsPage.bookmarkTitle = msg.args.short_name;
+                if (msg.args.icons && msg.args.icons.length > 1) {
+                    detailsPage.icon = webview.chooseBestIcon(msg.args.icons);
+                }
                 detailsPage.state = "editing"
             }
         }
