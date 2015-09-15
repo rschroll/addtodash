@@ -53,7 +53,7 @@ set(DESKTOP_FILE_NAME "addtodash.desktop")
 
 # This sets the commandline that is executed on the device
 set(EXEC "qmlscene $@ ${ADDTODASH_DIR}/${MAIN_QML}")
-set(EXEC_CONTAINER "qmlscene $@ ${CONTAINER_DIR}/${MAIN_QML}")
+set(EXEC_CONTAINER "qmlscene %U ${CONTAINER_DIR}/${MAIN_QML}")
 
 set(HOOKS "")
 foreach(N RANGE ${N_MAX})
