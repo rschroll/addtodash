@@ -70,14 +70,21 @@ oxide.addMessageHandler("beginParsing", function (msg) {
     [].slice.call(touchIconLinks).forEach(function(l) {
         parsed.icons.push({
             src: resolveURL(l.getAttribute("href")),
-            sizes: l.getAttribute("sizes")
+            sizes: l.getAttribute("sizes"),
+            priority: 3 // how much we value this icon. higher is better
         });
     });
 
+    // get a tileappimage if one is present and in the HTML
+    var mstile = document.querySelector('meta[name="msapplication-TileImage"][content]');
+    if (mstile) {
+        parsed.icons.push({src: resolveURL(mstile.getAttribute("content")), priority: 2});
+    }
+
     // get a favicon if one is present and in the HTML
-    var favicon = document.querySelector("link[rel=icon][href]");
+    var favicon = document.querySelector("link[rel~=icon][href]");
     if (favicon) {
-        parsed.icons.push({src: resolveURL(favicon.getAttribute("href"))});
+        parsed.icons.push({src: resolveURL(favicon.getAttribute("href")), priority: 1});
     }
 
 
