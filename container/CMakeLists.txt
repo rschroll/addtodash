@@ -13,6 +13,7 @@ install(FILES ${QML_JS_FILES} DESTINATION ${CONTAINER_DIR})
 install(FILES ${UCS_FILES} DESTINATION ${CONTAINER_DIR}/UCSComponents)
 
 foreach(N RANGE ${N_MAX})
+  set(CONTAINER_ICON              "/home/phablet/.local/share/addtodash.rschroll/container-${N}.png")
   configure_file(addtodash-container.desktop.in ${CMAKE_CURRENT_BINARY_DIR}/addtodash-container-${N}.desktop)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/addtodash-container-${N}.desktop DESTINATION ${DESKTOP_DIR})
 

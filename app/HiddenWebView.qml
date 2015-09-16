@@ -33,22 +33,26 @@ WebView {
                 if (isNaN(size_as_num)) {
                     return;
                 }
-                by_size.push([size_as_num, icon.src]);
+                // priority 100 because this actually has a size
+                // strictly not necessary (sizes come before no size)
+                by_size.push({size: size_as_num, priority:100, src:icon.src});
             } else {
                 // doesn't specify a size
                 // so add it to the list, with lowest size
-                by_size.push([0, icon.src]);
+                by_size.push({size:0, priority:icon.priority || 0, src:icon.src});
             }
-        });
-        by_size.sort(function(b, a) {
-            if (a[0] < b[0]) { return -1; }
-            if (a[0] > b[0]) { return 1; }
-            return 0;
         });
         if (by_size.length == 0) {
             return null;
         }
-        return by_size[0][1];
+        by_size.sort(function(b, a) {
+            if (a.size < b.size) { return -1; }
+            if (a.size > b.size) { return 1; }
+            if (a.priority < b.priority) { return -1; }
+            if (a.priority > b.priority) { return 1; }
+            return 0;
+        });
+        return by_size[0].src;
     }
 
     onLoadingChanged: {
@@ -77,10 +81,16 @@ WebView {
         }
     ]
 
+    /* For now, allow hidden pages to navigate themselves elsewhere. Review this;
+       ideally we wouldn't allow a page to jump somewhere else, but we need to
+       correctly handle things like a URL of http://example.org/thing
+       which redirects to http://example.org/thing/ with a slash, or to
+       https://example.org/thing to be over SSL.
     onNavigationRequested: {
         request.action = 255; // block all navigation requests
-        console.log("blocked request for", request.url);
+        console.log("blocked request for", request.url, "when url is", url);
     }
+    */
 
     preferences.allowScriptsToCloseWindows: false
     preferences.allowUniversalAccessFromFileUrls: false
