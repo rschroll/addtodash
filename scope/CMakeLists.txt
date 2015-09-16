@@ -36,6 +36,7 @@ add_definitions(-DAPP_ID="${APP_ID}")
 add_definitions(-DSCOPE_NAME="${SCOPE_NAME}")
 add_definitions(-DGETTEXT_PACKAGE="${GETTEXT_PACKAGE}")
 add_definitions(-DN_CONTAINERS=${N_CONTAINERS})
+add_definitions(-DCONTAINER_SQL="${CONTAINER_SQL}")
 
 # Put the ini files in the build directory next to the scope
 # .so file so that the test tools can find them.

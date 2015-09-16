@@ -28,9 +28,10 @@ MainView {
 
     function saveStatus() {
         Database.saveContainerState(root.myNumber, root.currentAppRootURL);
+        console.log("Container state saved");
     }
 
-    function parseAndLoad(executeURL) {
+    function parseAndLoad(executeURL, checkContainer) {
         /*
         The executeURL looks like this:
         addtodash://container-1/?url=http%3A%2F%2Fwww.ubuntu.com%2F&...
@@ -53,13 +54,18 @@ MainView {
             // we may have navigated to a new page in that web app
             // so don't do anything
         } else {
-            // either we're starting up and aren't currently showing anything,
-            // or we've been explicitly told by the scope to open this URL
-            // even though we're currently showing something else, so we
-            // assume that the scope knows what it's doing (i.e., we're the
-            // oldest running container) and open the URL as we've been told
-            webview.url = parsed.qs.url;
-            root.currentAppRootURL = webview.url;
+            // If we've starting up, open this url.  Otherwise, check if we're really
+            // the right container to handle this.  If not, trigger the correct one.
+            var containerNumber = checkContainer ? Database.getContainerId(parsed.qs.url) : -1;
+            console.log("Container " + root.myNumber + " asked to open " + parsed.qs.url +
+                        " but should be handled by " + containerNumber);
+            if (containerNumber != root.myNumber && containerNumber > -1) {
+                Qt.openUrlExternally("addtodash://container-" + containerNumber + "/?url=" +
+                                     encodeURIComponent(parsed.qs.url));
+            } else {
+                webview.url = parsed.qs.url;
+                root.currentAppRootURL = webview.url;
+            }
         }
         root.saveStatus();
     }
@@ -197,7 +203,7 @@ MainView {
                 return;
 
             console.log("Got URI request: " + uris[0])
-            root.parseAndLoad(uris[0])
+            root.parseAndLoad(uris[0], true)
         }
     }
 
@@ -210,7 +216,7 @@ MainView {
         });
         if (urls.length > 0) {
             console.log("Got URI on command line: " + urls[0]);
-            root.parseAndLoad(urls[0]);
+            root.parseAndLoad(urls[0], false);
         } else {
             console.log("Started with no URIs; args were " + JSON.stringify(args));
         }

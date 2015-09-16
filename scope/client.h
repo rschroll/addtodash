@@ -20,6 +20,8 @@ typedef std::deque<Bookmark> BookmarkList;
 
 BookmarkList get_bookmarks(std::string query, int sort);
 
+int get_container_id(std::string url);
+
 }
 
 #endif // CLIENT_H_

@@ -38,9 +38,13 @@ set(CONTAINER_DIR "share/qml/container")
 set(SHARED_DIR "share/qml/shared")
 set(MAIN_QML          "Main.qml")
 set(ICON              "graphics/addtodash.png")
-set(N_CONTAINERS 16)
+set(N_CONTAINERS 4)
 # CMake for loops contain both ends of a range.  I didn't know such stupidity was possible.
 math(EXPR N_MAX "${N_CONTAINERS} - 1")
+
+# We're trying to find a container with the given URL.  If not, create a new one, if we're
+# under the maximum number.  Otherwise, select the least-recently focused container,
+set(CONTAINER_SQL "SELECT id FROM (SELECT * FROM containers WHERE url = ? UNION ALL SELECT count(*), 1, 1 FROM containers UNION ALL SELECT id, url, min(lastFocused) FROM containers) WHERE id < ${N_CONTAINERS} LIMIT 1")
 
 set(SCOPE_INSTALL_DIR "/addtodash")
 set(SCOPE_NAME        "${APP_ID}_addtodash-scope")

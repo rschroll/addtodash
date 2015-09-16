@@ -1,9 +1,7 @@
-# Searches for all qml and javascript files in the current directory
-# to add them to the project, if you add new files in the directory
-# rerun cmake to make sure they show up in the project tree
-file(GLOB_RECURSE QML_JS_FILES *.qml *.js)
+set(JS_FILE database.js)
 
 # Make the files visible in qtcreator
-add_custom_target(addtodash_shared_QMlFiles ALL SOURCES ${QML_JS_FILES})
+add_custom_target(addtodash_shared_QMlFiles ALL SOURCES ${JS_FILE})
 
-install(FILES ${QML_JS_FILES} DESTINATION ${SHARED_DIR})
+configure_file(${JS_FILE} ${CMAKE_CURRENT_BINARY_DIR}/${JS_FILE})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${JS_FILE} DESTINATION ${SHARED_DIR})

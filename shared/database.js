@@ -39,3 +39,15 @@ function saveContainerState(id, url) {
                       "VALUES(?, ?, datetime('now'))", [id, url]);
     })
 }
+
+function getContainerId(url) {
+    var retval = -1
+    openDatabase().readTransaction(function (tx) {
+        var res = tx.executeSql("@CONTAINER_SQL@", [url])
+        if (res.rows.length != 1)
+            console.log("Warning: Could not determine container to use.")
+        else
+            retval = res.rows.item(0).id
+    })
+    return retval
+}

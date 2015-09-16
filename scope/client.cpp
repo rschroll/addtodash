@@ -81,4 +81,26 @@ BookmarkList get_bookmarks(std::string query, int sort) {
     return bookmarks;
 }
 
+int get_container_id(std::string url) {
+    int retval = -1;
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    if (!run_statement(CONTAINER_SQL, &db, &stmt))
+        goto exit;
+
+    if (sqlite3_bind_text(stmt, 1, url.data(), -1, SQLITE_STATIC)) {
+        std::cerr << "Error binding text: " << sqlite3_errmsg(db) << std::endl;
+        goto exit;
+    }
+
+    if (sqlite3_step(stmt))
+        retval = sqlite3_column_int(stmt, 0);
+    else
+        std::cerr << "Error reading container id" << std::endl;
+
+    exit:
+    sqlite3_close(db);
+    return retval;
+}
+
 }

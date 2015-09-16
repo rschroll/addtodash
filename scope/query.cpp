@@ -107,20 +107,21 @@ void Query::run(sc::SearchReplyProxy const& reply) {
     auto all_cat = reply->register_category("bookmarks", areFavorites ? _("Unsorted") : "", "",
                                             sc::CategoryRenderer(BOOKMARK_TEMPLATE));
 
-    int i = 0;
     for (const Client::Bookmark bookmark : bookmarks) {
         // If running a query, don't put results into different categories.
         sc::CategorisedResult res((bookmark.favorite || has_query) ? fav_cat : all_cat);
+        res.set_uri(bookmark.url);
         if (bookmark.url.substr(0, 4) == "http") {
-            ostringstream url;
-            url << "addtodash://container-" << i
-                << "/?url=" << url_encode(bookmark.url);
-            res.set_uri(url.str());
-            i = (i + 1) % N_CONTAINERS;
-        } else {
-            res.set_uri(bookmark.url);
+            int n = Client::get_container_id(bookmark.url);
+            if (n >= 0) {
+                ostringstream url;
+                url << "addtodash://container-" << n
+                    << "/?url=" << url_encode(bookmark.url);
+                res.set_uri(url.str());
+                res.set_title(std::to_string(n) + ": " + bookmark.title);
+            }
         }
-        res.set_title(bookmark.title);
+//        res.set_title(bookmark.title);
         res.set_art(bookmark.icon);
         res.set_intercept_activation();
 
