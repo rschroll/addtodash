@@ -12,7 +12,7 @@ function onDatabaseCreated(db) {
         tx.executeSql("CREATE TABLE IF NOT EXISTS Bookmarks(url TEXT UNIQUE, title TEXT, " +
                       "folder TEXT DEFAULT '', icon BLOB DEFAULT '', manifest TEXT DEFAULT '', " +
                       "created INT, favorite INT DEFAULT 0, webapp INT DEFAULT 0)");
-        tx.executeSql("CREATE TABLE IF NOT EXISTS Containers(myNumber INT UNIQUE, url TEXT, " +
+        tx.executeSql("CREATE TABLE IF NOT EXISTS Containers(id INT UNIQUE, url TEXT, " +
                       "lastFocused INT)");
     })
 }
@@ -33,9 +33,9 @@ function listBookmarks(callback) {
     })
 }
 
-function saveContainerState(url, myNumber) {
+function saveContainerState(id, url) {
     openDatabase().transaction(function (tx) {
-        tx.executeSql("INSERT OR REPLACE INTO Containers(myNumber, url, lastFocused) " +
-                      "VALUES(?, ?, datetime('now'))", [myNumber, url]);
+        tx.executeSql("INSERT OR REPLACE INTO Containers(id, url, lastFocused) " +
+                      "VALUES(?, ?, datetime('now'))", [id, url]);
     })
 }
