@@ -51,3 +51,9 @@ function hasUrl(url) {
     })
     return retval
 }
+
+function removeUrl(url) {
+    openDatabase().transaction(function (tx) {
+        tx.executeSql("DELETE FROM Bookmarks WHERE url = ?", [url])
+    })
+}

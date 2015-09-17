@@ -125,10 +125,23 @@ MainView {
                 id: bookmarkDelegate
 
                 ListItem {
+                    id: listItem
                     action: Action {
                         onTriggered: stack.push(Qt.resolvedUrl("DetailsPage.qml"),
                                                 {url: model.url, bookmarkTitle: model.title,
                                                     icon: model.icon || "", favorite: model.favorite})
+                    }
+
+                    leadingActions: ListItemActions {
+                        actions: [
+                            Action {
+                                iconName: "delete"
+                                onTriggered: {
+                                    Database.removeUrl(model.url)
+                                    listItem.ListView.view.model.remove(model.index)
+                                }
+                            }
+                        ]
                     }
 
                     UbuntuShape {
