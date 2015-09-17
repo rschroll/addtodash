@@ -40,10 +40,10 @@ Page {
         function parsingCallback(msg, frame) {
             console.log("got message", JSON.stringify(msg.args));
             if (detailsPage.state == "loading") {
-                detailsPage.bookmarkTitle = msg.args.short_name;
-                if (msg.args.icons && msg.args.icons.length) {
-                    downloader.setIcons(webview.getBestIcons(msg.args.icons));
-                }
+                detailsPage.bookmarkTitle = msg.args.short_name || ""
+                detailsPage.icon = ""
+                if (msg.args.icons && msg.args.icons.length)
+                    downloader.setIcons(webview.getBestIcons(msg.args.icons))
                 detailsPage.state = "editing"
             }
         }
