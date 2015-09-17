@@ -34,6 +34,7 @@ Page {
             }
         } else {
             origUrl = url
+            duplicateItem.visible = false
         }
     }
 
@@ -116,6 +117,9 @@ Page {
                 }
                 inputMethodHints:Qt.ImhUrlCharactersOnly
                 readOnly: detailsPage.state != "new"
+
+                onTextChanged: duplicateItem.state = ((text != origUrl && Database.hasUrl(text)) ?
+                                                          "visible" : "hidden")
             }
 
             Button {
@@ -132,6 +136,60 @@ Page {
                     detailsPage.state = "new"
                     urlField.forceActiveFocus()
                 }
+            }
+        }
+
+        Item {
+            id: duplicateItem
+            width: parent.width
+            state: "hidden"
+            clip: true
+
+            states: [
+                State {
+                    name: "hidden"
+                    PropertyChanges {
+                        target: duplicateItem
+                        height: 0
+                    }
+                },
+                State {
+                    name: "visible"
+                    PropertyChanges {
+                        target: duplicateItem
+                        height: duplicateLabel.height
+                    }
+                }
+            ]
+
+            Behavior on height {
+                NumberAnimation {
+                    easing.type: Easing.InOutQuad
+                }
+            }
+
+            Icon {
+                id: duplicateIcon
+                name: "dialog-warning-symbolic"
+                color: UbuntuColors.red
+                anchors {
+                    left: parent.left
+                    leftMargin: mainColumn.labelWidth
+                    verticalCenter: parent.verticalCenter
+                }
+                height: duplicateLabel.height
+            }
+
+            Label {
+                id: duplicateLabel
+                text: i18n.tr("Saved URL will be replaced.")
+                anchors {
+                    left: duplicateIcon.right
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                }
+                fontSize: "small"
+                color: UbuntuColors.red
             }
         }
 

@@ -42,3 +42,12 @@ function saveContainerState(url, myNumber) {
                       "VALUES(?, ?, datetime('now'))", [myNumber, url]);
     })
 }
+
+function hasUrl(url) {
+    var retval = false;
+    openDatabase().readTransaction(function (tx) {
+        var res = tx.executeSql("SELECT url FROM Bookmarks WHERE url = ?", [url])
+        retval = (res.rows.length > 0)
+    })
+    return retval
+}
