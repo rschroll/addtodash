@@ -85,6 +85,18 @@ MainView {
                 delegate: bookmarkDelegate
                 section.property: "section"
                 section.delegate: headerDelegate
+
+                remove: Transition {
+                    UbuntuNumberAnimation {
+                        property: "opacity"
+                        to: 0
+                    }
+                }
+                removeDisplaced: Transition {
+                    UbuntuNumberAnimation {
+                        property: "y"
+                    }
+                }
             }
 
             Component {
