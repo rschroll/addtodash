@@ -12,7 +12,7 @@ WebView {
     // what it is, though.
     property string usContext: "messaging://"
 
-    function chooseBestIcon(icons) {
+    function getBestIcons(icons) {
         // pick the largest by size
         var by_size = [];
         icons.forEach(function(icon) {
@@ -52,7 +52,7 @@ WebView {
             if (a.priority > b.priority) { return 1; }
             return 0;
         });
-        return by_size[0].src;
+        return by_size.map(function (icon) { return icon.src; });
     }
 
     onLoadingChanged: {

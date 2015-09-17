@@ -1,6 +1,8 @@
 import QtQuick 2.0
 import Ubuntu.Components 1.2
 
+import Icon_Plugin 1.0
+
 import "../shared/database.js" as Database
 
 Page {
@@ -39,11 +41,40 @@ Page {
             console.log("got message", JSON.stringify(msg.args));
             if (detailsPage.state == "loading") {
                 detailsPage.bookmarkTitle = msg.args.short_name;
-                if (msg.args.icons && msg.args.icons.length > 1) {
-                    detailsPage.icon = webview.chooseBestIcon(msg.args.icons);
+                if (msg.args.icons && msg.args.icons.length) {
+                    downloader.setIcons(webview.getBestIcons(msg.args.icons));
                 }
                 detailsPage.state = "editing"
             }
+        }
+    }
+
+    IconDownloader {
+        id: downloader
+        property var iconList
+
+        function setIcons(icons) {
+            iconList = icons
+            iconActivity.visible = true
+            tryNextIcon()
+        }
+
+        function tryNextIcon() {
+            var icon = iconList.shift()
+            if (icon)
+                download(icon)
+            else
+                iconActivity.visible = false
+        }
+
+        onDownloadError: {
+            console.log("Download error: " + message)
+            tryNextIcon()
+        }
+
+        onDownloadComplete: {
+            detailsPage.icon = "file://" + filename
+            iconActivity.visible = false
         }
     }
 
@@ -152,6 +183,13 @@ Page {
                     source: detailsPage.icon ||
                             "file:///usr/share/icons/suru/actions/scalable/stock_website.svg"
                 }
+            }
+
+            ActivityIndicator {
+                id: iconActivity
+                anchors.centerIn: iconShape
+                visible: false
+                running: visible
             }
 
             Button {
