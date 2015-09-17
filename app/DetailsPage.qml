@@ -10,6 +10,7 @@ Page {
     visible: false
 
     title: newUrl ? i18n.tr("Add Bookmark") : i18n.tr("Edit Bookmark")
+    property string origUrl: ""
     property alias url: urlField.text
     property alias bookmarkTitle: titleField.text
     property string icon: ""
@@ -31,6 +32,8 @@ Page {
             } else {
                 state = "new"
             }
+        } else {
+            origUrl = url
         }
     }
 
@@ -230,7 +233,7 @@ Page {
                 color: UbuntuColors.green
 
                 onClicked: {
-                    Database.addBookmark(detailsPage.url, detailsPage.bookmarkTitle,
+                    Database.addBookmark(detailsPage.url, detailsPage.origUrl, detailsPage.bookmarkTitle,
                                          detailsPage.icon, detailsPage.favorite)
                     detailsPage.close(true)
                 }

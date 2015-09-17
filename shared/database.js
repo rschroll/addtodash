@@ -17,8 +17,11 @@ function onDatabaseCreated(db) {
     })
 }
 
-function addBookmark(url, title, icon, favorite) {
+function addBookmark(url, origUrl, title, icon, favorite) {
     openDatabase().transaction(function (tx) {
+        if (origUrl != "" && origUrl != "url")
+            tx.executeSql("DELETE FROM Bookmarks WHERE url = ?", [origUrl])
+
         tx.executeSql("INSERT OR REPLACE INTO Bookmarks(url, title, icon, created, favorite) " +
                       "VALUES(?, ?, ?, datetime('now'), ?)", [url, title, icon, favorite])
     })
