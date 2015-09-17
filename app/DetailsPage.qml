@@ -14,7 +14,7 @@ Page {
     property alias url: urlField.text
     property alias bookmarkTitle: titleField.text
     property string icon: ""
-    property int favorite: 0
+    property real favorite: 0
     property bool newUrl: false
     property string state: "editing"
 
@@ -36,6 +36,7 @@ Page {
             origUrl = url
             duplicateItem.visible = false
         }
+        favoriteSwitch.checked = (detailsPage.favorite > 0)
     }
 
     HiddenWebView {
@@ -270,6 +271,30 @@ Page {
         }
 
         Item {
+            id: favoriteItem
+            visible: detailsPage.state != "loading"
+            width: parent.width
+            height: favoriteSwitch.height
+
+            Label {
+                id: favoriteLabel
+                text: i18n.tr("Favorite")
+                width: mainColumn.labelWidth
+                anchors {
+                    left: parent.left
+                    verticalCenter: parent.verticalCenter
+                }
+            }
+
+            Switch {
+                id: favoriteSwitch
+                anchors {
+                     right: parent.right
+                }
+            }
+        }
+
+        Item {
             id: buttonItem
             visible: detailsPage.state != "loading"
             height: childrenRect.height
@@ -291,8 +316,9 @@ Page {
                 color: UbuntuColors.green
 
                 onClicked: {
+                    var favorite = favoriteSwitch.checked ? (detailsPage.favorite || -1) : 0
                     Database.addBookmark(detailsPage.url, detailsPage.origUrl, detailsPage.bookmarkTitle,
-                                         detailsPage.icon, detailsPage.favorite)
+                                         detailsPage.icon, favorite)
                     detailsPage.close(true)
                 }
             }
