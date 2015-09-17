@@ -123,14 +123,67 @@ MainView {
 
             Component {
                 id: bookmarkDelegate
-                Subtitled {
-                    text: model.title
-                    subText: model.url
-                    icon: model.icon
-                    fallbackIconName: "stock_website"
-                    onClicked: stack.push(Qt.resolvedUrl("DetailsPage.qml"),
-                                          {url: model.url, bookmarkTitle: model.title,
-                                              icon: model.icon || "", favorite: model.favorite})
+
+                ListItem {
+                    action: Action {
+                        onTriggered: stack.push(Qt.resolvedUrl("DetailsPage.qml"),
+                                                {url: model.url, bookmarkTitle: model.title,
+                                                    icon: model.icon || "", favorite: model.favorite})
+                    }
+
+                    UbuntuShape {
+                        id: iconHelper
+
+                        width: height
+                        height: Math.min(units.gu(5), parent.height - units.gu(1))
+                        anchors {
+                            left: parent.left
+                            leftMargin: units.gu(2)
+                            verticalCenter: parent.verticalCenter
+                        }
+                        source: Image {
+                            asynchronous: true
+                            fillMode: Image.PreserveAspectCrop
+                            clip: true
+                            source: model.icon ||
+                                    "file:///usr/share/icons/suru/actions/scalable/stock_website.svg"
+                        }
+                    }
+
+                    Item  {
+                        id: middleVisuals
+                        anchors {
+                            left: iconHelper.right
+                            leftMargin: units.gu(2)
+                            right: parent.right
+                            verticalCenter: parent.verticalCenter
+                        }
+                        height: childrenRect.height + label.anchors.topMargin + subLabel.anchors.bottomMargin
+
+                        Label {
+                            id: label
+                            text: model.title
+                            color: Theme.palette.selected.backgroundText
+                            anchors {
+                                top: parent.top
+                                left: parent.left
+                                right: parent.right
+                            }
+                        }
+                        Label {
+                            id: subLabel
+                            text: model.url
+                            color: Theme.palette.normal.backgroundText
+                                anchors {
+                                left: parent.left
+                                right: parent.right
+                                top: label.bottom
+                            }
+                            fontSize: "small"
+                            wrapMode: Text.Wrap
+                            maximumLineCount: 5
+                        }
+                    }
                 }
             }
         }
