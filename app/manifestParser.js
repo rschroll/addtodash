@@ -61,19 +61,21 @@ oxide.addMessageHandler("beginParsing", function (msg) {
         parsed.short_name = title.textContent.substr(0,12);
     }
     parsed.lang = document.getElementsByTagName("html")[0].getAttribute("lang") || "";
-    // Apple touch icons
-    var touchIconLinks = document.querySelectorAll(
-        'link[rel="apple-touch-icon"][href]' + 
-        ',' +
-        'link[rel="apple-touch-icon-precomposed"][href]'
-    );
-    [].slice.call(touchIconLinks).forEach(function(l) {
-        parsed.icons.push({
-            src: resolveURL(l.getAttribute("href")),
-            sizes: l.getAttribute("sizes"),
-            priority: 3 // how much we value this icon. higher is better
+
+    function iconLinks(selector, priority) {
+        var links = document.querySelectorAll("link[" + selector + "][href]");
+        [].slice.call(links).forEach(function (l) {
+            parsed.icons.push({
+                src: resolveURL(l.getAttribute("href")),
+                sizes: l.getAttribute("sizes"),
+                priority: priority  // how much we value this icon. higher is better
+            });
         });
-    });
+    }
+
+    // Apple touch icons
+    iconLinks('rel="apple-touch-icon"', 3);
+    iconLinks('rel="apple-touch-icon-precomposed"', 3);
 
     // get a tileappimage if one is present and in the HTML
     var mstile = document.querySelector('meta[name="msapplication-TileImage"][content]');
@@ -82,11 +84,10 @@ oxide.addMessageHandler("beginParsing", function (msg) {
     }
 
     // get a favicon if one is present and in the HTML
-    var favicon = document.querySelector("link[rel~=icon][href]");
-    if (favicon) {
-        parsed.icons.push({src: resolveURL(favicon.getAttribute("href")), priority: 1});
-    }
+    iconLinks("rel~=icon", 1);
 
+    // And try the /favicon.ico file if nothing else
+    parsed.icons.push({src: resolveURL("/favicon.ico"), priority: 0});
 
     // Look for a manifest
     getManifest(function() {
