@@ -59,20 +59,14 @@ MainView {
             title: i18n.tr("Bookmarks")
 
             ListModel {
-                id: favoriteBookmarks
-            }
-            ListModel {
-                id: unsortedBookmarks
+                id: bookmarks
             }
 
             function loadBookmarks() {
-                favoriteBookmarks.clear()
-                unsortedBookmarks.clear()
+                bookmarks.clear()
                 Database.listBookmarks(function (item) {
-                    if (item.favorite)
-                        favoriteBookmarks.append(item)
-                    else
-                        unsortedBookmarks.append(item)
+                    item.section = (item.favorite > 0) ? i18n.tr("Favorites") : i18n.tr("Unsorted")
+                    bookmarks.append(item)
                 })
             }
             Component.onCompleted: loadBookmarks()
@@ -85,39 +79,18 @@ MainView {
                 }
             ]
 
-            Column {
+            ListView {
                 anchors.fill: parent
+                model: bookmarks
+                delegate: bookmarkDelegate
+                section.property: "section"
+                section.delegate: headerDelegate
+            }
 
+            Component {
+                id: headerDelegate
                 Header {
-                    id: favoriteHeader
-                    text: i18n.tr("Favorites")
-                }
-
-                Item {
-                    height: parent.height / 2 - favoriteHeader.height
-                    width: parent.width
-                    ListView {
-                        anchors.fill: parent
-                        model: favoriteBookmarks
-                        delegate: bookmarkDelegate
-                        clip: true
-                    }
-                }
-
-                Header {
-                    id: unsortedHeader
-                    text: i18n.tr("Unsorted")
-                }
-
-                Item {
-                    height: parent.height / 2 - unsortedHeader.height
-                    width: parent.width
-                    ListView {
-                        anchors.fill: parent
-                        model: unsortedBookmarks
-                        delegate: bookmarkDelegate
-                        clip: true
-                    }
+                    text: section
                 }
             }
 
