@@ -28,6 +28,9 @@ MainView {
     width: units.gu(100)
     height: units.gu(75)
 
+    property string favorites: i18n.tr("Favorites")
+    property string unsorted: i18n.tr("Unsorted")
+
     function edit(url) {
         stack.push(Qt.resolvedUrl("DetailsPage.qml"), {url: url, newUrl: true})
     }
@@ -65,7 +68,7 @@ MainView {
             function loadBookmarks() {
                 bookmarks.clear()
                 Database.listBookmarks(function (item) {
-                    item.section = (item.favorite > 0) ? i18n.tr("Favorites") : i18n.tr("Unsorted")
+                    item.section = (item.favorite > 0) ? root.favorites : root.unsorted
                     bookmarks.append(item)
                 })
             }
@@ -97,12 +100,65 @@ MainView {
                         property: "y"
                     }
                 }
+                moveDisplaced: Transition {
+                    UbuntuNumberAnimation {
+                        property: "y"
+                    }
+                }
+
+                property int firstUnsorted
+                property bool draggedIsFavorite
+                ViewItems.onDragUpdated: {
+                    if (event.status == ListItemDrag.Started) {
+                        firstUnsorted = 0;
+                        while (model.get(firstUnsorted).section == root.favorites &&
+                               firstUnsorted < model.count)
+                            firstUnsorted += 1
+
+                        draggedIsFavorite = (event.from < firstUnsorted)
+                        if (!draggedIsFavorite)
+                            firstUnsorted += 1 // Will happen when dragged becomes favorite
+                    } else if (event.status == ListItemDrag.Moving) {
+                        if (event.to < firstUnsorted) {
+                            if (!draggedIsFavorite) {
+                                model.set(event.from, {"section": root.favorites})
+                                draggedIsFavorite = true
+                            }
+                            model.move(event.from, event.to, 1)
+
+                            var favorite = 1
+                            if (event.to == 0 && model.count > 1) {
+                                favorite = 2 * model.get(1).favorite
+                            } else if (event.to == firstUnsorted - 1) {
+                                favorite = 0.5 * model.get(event.to - 1).favorite
+                            } else {
+                                favorite = 0.5 * (model.get(event.to - 1).favorite +
+                                                  model.get(event.to + 1).favorite)
+                            }
+                            Database.setFavorite(model.get(event.to).url, favorite)
+                            model.set(event.to, {"favorite": favorite})
+                        } else {
+                            if (draggedIsFavorite) {
+                                model.set(event.from, {"section": root.unsorted, "favorite": 0})
+                                draggedIsFavorite = false
+                                Database.setFavorite(model.get(event.from).url, 0)
+
+                                if (event.from != firstUnsorted - 1)
+                                    console.log("Warning: item not at boundary as expected")
+                            }
+                            event.accept = false
+                        }
+                    } else if (event.status == ListItemDrag.Dropped) {
+                        // Usually not called...
+                    }
+                }
             }
 
             Component {
                 id: headerDelegate
                 Header {
                     text: section
+                    z: 1.5  // Moving items are raised to z = 2.  Make sure we're below that.
                 }
             }
 
@@ -111,6 +167,9 @@ MainView {
 
                 ListItem {
                     id: listItem
+                    color: "#f6f6f6"
+                    onPressAndHold: ListView.view.ViewItems.dragMode = !ListView.view.ViewItems.dragMode
+
                     action: Action {
                         onTriggered: stack.push(Qt.resolvedUrl("DetailsPage.qml"),
                                                 {url: model.url, bookmarkTitle: model.title,

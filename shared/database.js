@@ -36,6 +36,12 @@ function addBookmark(url, origUrl, title, icon, favorite) {
     })
 }
 
+function setFavorite(url, favorite) {
+    openDatabase().transaction(function (tx) {
+        tx.executeSql("UPDATE Bookmarks SET favorite = ? WHERE url = ?", [favorite, url])
+    })
+}
+
 function listBookmarks(callback) {
     openDatabase().readTransaction(function (tx) {
         var res = tx.executeSql("SELECT url, title, icon, favorite FROM bookmarks " +
