@@ -243,6 +243,34 @@ MainView {
                     }
                 }
             }
+
+            MouseArea {
+                visible: bookmarks.count == 0
+                anchors.fill: parent
+                onClicked: root.edit("")
+
+                Column {
+                    visible: bookmarks.count == 0
+                    anchors.centerIn: parent
+                    spacing: units.gu(2)
+
+                    Label {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: i18n.tr("Share link or tap here")
+                        fontSize: "large"
+                    }
+                    Icon {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        name: "add"
+                        width: units.gu(5)
+                    }
+                    Label {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: i18n.tr("to add bookmarks")
+                        fontSize: "large"
+                    }
+                }
+            }
         }
     }
 
