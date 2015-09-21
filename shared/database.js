@@ -11,16 +11,34 @@ function onDatabaseCreated(db) {
     db.transaction(function (tx) {
         tx.executeSql("CREATE TABLE IF NOT EXISTS Bookmarks(url TEXT UNIQUE, title TEXT, " +
                       "folder TEXT DEFAULT '', icon BLOB DEFAULT '', manifest TEXT DEFAULT '', " +
-                      "created INT, favorite INT DEFAULT 0, webapp INT DEFAULT 0)");
+                      "created INT, favorite REAL DEFAULT 0, webapp INT DEFAULT 0)");
         tx.executeSql("CREATE TABLE IF NOT EXISTS Containers(id INT UNIQUE, url TEXT, " +
                       "lastFocused INT)");
     })
 }
 
-function addBookmark(url, title, icon, favorite) {
+function addBookmark(url, origUrl, title, icon, favorite) {
     openDatabase().transaction(function (tx) {
+        if (origUrl != "" && origUrl != "url")
+            tx.executeSql("DELETE FROM Bookmarks WHERE url = ?", [origUrl])
+
+        if (favorite < 0) {  // Indicates this bookmark should become least favorite
+            var res = tx.executeSql("SELECT favorite FROM Bookmarks WHERE favorite > 0 " +
+                                    "ORDER BY favorite ASC")
+            if (res.rows.length)
+                favorite = res.rows.item(0).favorite / 2
+            else
+                favorite = 1
+        }
+
         tx.executeSql("INSERT OR REPLACE INTO Bookmarks(url, title, icon, created, favorite) " +
                       "VALUES(?, ?, ?, datetime('now'), ?)", [url, title, icon, favorite])
+    })
+}
+
+function setFavorite(url, favorite) {
+    openDatabase().transaction(function (tx) {
+        tx.executeSql("UPDATE Bookmarks SET favorite = ? WHERE url = ?", [favorite, url])
     })
 }
 
@@ -50,4 +68,19 @@ function getContainerId(url) {
             retval = res.rows.item(0).id
     })
     return retval
+}
+
+function hasUrl(url) {
+    var retval = false;
+    openDatabase().readTransaction(function (tx) {
+        var res = tx.executeSql("SELECT url FROM Bookmarks WHERE url = ?", [url])
+        retval = (res.rows.length > 0)
+    })
+    return retval
+}
+
+function removeUrl(url) {
+    openDatabase().transaction(function (tx) {
+        tx.executeSql("DELETE FROM Bookmarks WHERE url = ?", [url])
+    })
 }

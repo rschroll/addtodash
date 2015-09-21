@@ -64,6 +64,14 @@ foreach(N RANGE ${N_MAX})
   set(HOOKS "${HOOKS},\n\"container-${N}\": {\"apparmor\": \"addtodash-container.apparmor\", \"desktop\": \"addtodash-container-${N}.desktop\", \"urls\": \"addtodash-container-${N}.url-dispatcher\"}")
 endforeach(N)
 
+# If we need to refer to the scope's name or package in code, these definitions will help
+add_definitions(-DPACKAGE_NAME="${PACKAGE_NAME}")
+add_definitions(-DAPP_ID="${APP_ID}")
+add_definitions(-DSCOPE_NAME="${SCOPE_NAME}")
+add_definitions(-DGETTEXT_PACKAGE="${GETTEXT_PACKAGE}")
+add_definitions(-DN_CONTAINERS=${N_CONTAINERS})
+add_definitions(-DCONTAINER_SQL="${CONTAINER_SQL}")
+
 # Configures the manifest file. The manifest file describes the click package
 # to the target system. All cmake variables that are defined at this point
 # can be used in the manifest file and will be automatically replaced by cmake
@@ -83,6 +91,7 @@ add_subdirectory(po)
 add_subdirectory(scope)
 add_subdirectory(container)
 add_subdirectory(shared)
+add_subdirectory(icon-plugin)
 
 add_custom_target("run" /usr/bin/qmlscene -I ${CMAKE_BINARY_DIR}/backend  ${CMAKE_SOURCE_DIR}/app/addtodash.qml
                     WORKING_DIRECTORY ./app)

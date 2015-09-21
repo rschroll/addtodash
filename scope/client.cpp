@@ -67,7 +67,7 @@ BookmarkList get_bookmarks(std::string query, int sort) {
             b.url = sqlite3_column_string(stmt, 0, "");
             b.title = sqlite3_column_string(stmt, 1, b.url);
             b.icon = sqlite3_column_string(stmt, 2, "file:///usr/share/icons/suru/actions/scalable/stock_website.svg");
-            b.favorite = sqlite3_column_int(stmt, 3);
+            b.favorite = sqlite3_column_double(stmt, 3);
             bookmarks.emplace_back(b);
             res = sqlite3_step(stmt);
         }

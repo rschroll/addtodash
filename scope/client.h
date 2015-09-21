@@ -13,7 +13,7 @@ struct Bookmark {
     std::string url;
     std::string title;
     std::string icon;
-    int favorite;
+    double favorite;
 };
 
 typedef std::deque<Bookmark> BookmarkList;

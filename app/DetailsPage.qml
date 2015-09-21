@@ -1,6 +1,8 @@
 import QtQuick 2.0
 import Ubuntu.Components 1.2
 
+import Icon_Plugin 1.0
+
 import "../shared/database.js" as Database
 
 Page {
@@ -8,10 +10,11 @@ Page {
     visible: false
 
     title: newUrl ? i18n.tr("Add Bookmark") : i18n.tr("Edit Bookmark")
+    property string origUrl: ""
     property alias url: urlField.text
     property alias bookmarkTitle: titleField.text
     property string icon: ""
-    property int favorite: 0
+    property real favorite: 0
     property bool newUrl: false
     property string state: "editing"
 
@@ -29,7 +32,11 @@ Page {
             } else {
                 state = "new"
             }
+        } else {
+            origUrl = url
+            duplicateItem.visible = false
         }
+        favoriteSwitch.checked = (detailsPage.favorite > 0)
     }
 
     HiddenWebView {
@@ -38,11 +45,41 @@ Page {
         function parsingCallback(msg, frame) {
             console.log("got message", JSON.stringify(msg.args));
             if (detailsPage.state == "loading") {
-                bookmarkTitle = msg.args.short_name;
-                if (msg.args.icons && msg.args.icons.length > 1)
-                    icon = webview.chooseBestIcon(msg.args.icons);
+                detailsPage.bookmarkTitle = msg.args.short_name || ""
+                detailsPage.icon = ""
+                if (msg.args.icons && msg.args.icons.length)
+                    downloader.setIcons(webview.getBestIcons(msg.args.icons))
                 detailsPage.state = "editing"
             }
+        }
+    }
+
+    IconDownloader {
+        id: downloader
+        property var iconList
+
+        function setIcons(icons) {
+            iconList = icons
+            iconActivity.visible = true
+            tryNextIcon()
+        }
+
+        function tryNextIcon() {
+            var icon = iconList.shift()
+            if (icon)
+                download(icon)
+            else
+                iconActivity.visible = false
+        }
+
+        onDownloadError: {
+            console.log("Download error: " + message)
+            tryNextIcon()
+        }
+
+        onDownloadComplete: {
+            detailsPage.icon = "file://" + filename
+            iconActivity.visible = false
         }
     }
 
@@ -81,6 +118,9 @@ Page {
                 }
                 inputMethodHints:Qt.ImhUrlCharactersOnly
                 readOnly: detailsPage.state != "new"
+
+                onTextChanged: duplicateItem.state = ((text != origUrl && Database.hasUrl(text)) ?
+                                                          "visible" : "hidden")
             }
 
             Button {
@@ -97,6 +137,60 @@ Page {
                     detailsPage.state = "new"
                     urlField.forceActiveFocus()
                 }
+            }
+        }
+
+        Item {
+            id: duplicateItem
+            width: parent.width
+            state: "hidden"
+            clip: true
+
+            states: [
+                State {
+                    name: "hidden"
+                    PropertyChanges {
+                        target: duplicateItem
+                        height: 0
+                    }
+                },
+                State {
+                    name: "visible"
+                    PropertyChanges {
+                        target: duplicateItem
+                        height: duplicateLabel.height
+                    }
+                }
+            ]
+
+            Behavior on height {
+                NumberAnimation {
+                    easing.type: Easing.InOutQuad
+                }
+            }
+
+            Icon {
+                id: duplicateIcon
+                name: "dialog-warning-symbolic"
+                color: UbuntuColors.red
+                anchors {
+                    left: parent.left
+                    leftMargin: mainColumn.labelWidth
+                    verticalCenter: parent.verticalCenter
+                }
+                height: duplicateLabel.height
+            }
+
+            Label {
+                id: duplicateLabel
+                text: i18n.tr("Saved URL will be replaced.")
+                anchors {
+                    left: duplicateIcon.right
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                }
+                fontSize: "small"
+                color: UbuntuColors.red
             }
         }
 
@@ -153,6 +247,13 @@ Page {
                 }
             }
 
+            ActivityIndicator {
+                id: iconActivity
+                anchors.centerIn: iconShape
+                visible: false
+                running: visible
+            }
+
             Button {
                 width: parent.width/2 - units.gu(1)
                 anchors {
@@ -165,6 +266,30 @@ Page {
                 onClicked: {
                     detailsPage.state = "loading"
                     webview.url = detailsPage.url
+                }
+            }
+        }
+
+        Item {
+            id: favoriteItem
+            visible: detailsPage.state != "loading"
+            width: parent.width
+            height: favoriteSwitch.height
+
+            Label {
+                id: favoriteLabel
+                text: i18n.tr("Favorite")
+                width: mainColumn.labelWidth
+                anchors {
+                    left: parent.left
+                    verticalCenter: parent.verticalCenter
+                }
+            }
+
+            Switch {
+                id: favoriteSwitch
+                anchors {
+                     right: parent.right
                 }
             }
         }
@@ -191,8 +316,9 @@ Page {
                 color: UbuntuColors.green
 
                 onClicked: {
-                    Database.addBookmark(detailsPage.url, detailsPage.bookmarkTitle,
-                                         detailsPage.icon, detailsPage.favorite)
+                    var favorite = favoriteSwitch.checked ? (detailsPage.favorite || -1) : 0
+                    Database.addBookmark(detailsPage.url, detailsPage.origUrl, detailsPage.bookmarkTitle,
+                                         detailsPage.icon, favorite)
                     detailsPage.close(true)
                 }
             }

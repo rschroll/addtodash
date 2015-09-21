@@ -1,6 +1,6 @@
 [Desktop Entry]
 _Name=addtodash
-Comment=My project description
+Comment=Add web apps to the Dash
 Exec=@EXEC@
 Icon=@ICON@
 Terminal=false

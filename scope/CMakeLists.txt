@@ -30,14 +30,6 @@ include_directories(
   ${SCOPE_INCLUDE_DIRS}
 )
 
-# If we need to refer to the scope's name or package in code, these definitions will help
-add_definitions(-DPACKAGE_NAME="${PACKAGE_NAME}")
-add_definitions(-DAPP_ID="${APP_ID}")
-add_definitions(-DSCOPE_NAME="${SCOPE_NAME}")
-add_definitions(-DGETTEXT_PACKAGE="${GETTEXT_PACKAGE}")
-add_definitions(-DN_CONTAINERS=${N_CONTAINERS})
-add_definitions(-DCONTAINER_SQL="${CONTAINER_SQL}")
-
 # Put the ini files in the build directory next to the scope
 # .so file so that the test tools can find them.
 intltool_merge_translations(
